@@ -12,12 +12,14 @@ export const permissions: Record<Role, PermissionsByRole> = {
   ADMIN: (user, { can, cannot }) => {
     can('manage', 'all')
 
+    // Organizations
     cannot(['transfer_ownership', 'update'], 'Organization')
     can(['transfer_ownership', 'update'], 'Organization', { ownerId: user.id })
   },
   MEMBER: (user, { can }) => {
     can('get', 'User')
 
+    // Projects
     can(['create', 'get'], 'Project')
     can(['update', 'delete'], 'Project', { ownerId: user.id })
   },
