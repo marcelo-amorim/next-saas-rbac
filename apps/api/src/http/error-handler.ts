@@ -7,7 +7,13 @@ import { ZodError } from 'zod'
 type FastifyErrorHandler = FastifyInstance['errorHandler']
 
 export const errorHandler: FastifyErrorHandler = (error, _request, reply) => {
-  console.log(error)
+  if (error instanceof ZodError) {
+    return reply.status(400).send({
+      message: 'Validation error',
+      errors: error.flatten().fieldErrors,
+    })
+  }
+
   if (hasZodFastifySchemaValidationErrors(error)) {
     return reply.code(400).send({
       message: 'Validation error.',
