@@ -20,6 +20,7 @@ import { resetPassword } from './routes/auth/reset-password'
 import { authenticateWithGithub } from './routes/auth/authenticate-with-github'
 import { env } from '@saas/env'
 import { createOrganization } from './routes/orgs/create-organization'
+import { getMembership } from './routes/orgs/get-membershipt'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -71,6 +72,7 @@ app.register(getProfile)
 app.register(requestPasswordRecover)
 app.register(resetPassword)
 app.register(createOrganization)
+app.register(getMembership)
 
 app
   .listen({ port: env.SERVER_PORT })
