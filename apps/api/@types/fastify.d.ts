@@ -6,6 +6,7 @@ declare module 'fastify' {
   export interface FastifyRequest {
     getCurrentUserId(): Promise<string>
     getUserMembership(slug: string): Promise<{
+      userId: string
       organization: Organization
       membership: Member
     }>
