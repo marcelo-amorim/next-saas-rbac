@@ -2,63 +2,58 @@ import { FastifyInstance } from 'fastify'
 import { ZodTypeProvider } from 'fastify-type-provider-zod'
 import z from 'zod'
 import { prisma } from '../../../lib/prisma'
-import { createSlug } from '../../utils/create-slug'
 import { auth } from '../../middlewares/auth'
 import { getUserPermissions } from '../../utils/get-user-permissions'
 import { UnauthorizedError } from '../_errors/unauthorized-error'
+import { projectSchema } from '@saas/auth'
+import { BadRequestError } from '../_errors/bad-request-error'
 
-export async function createProject(app: FastifyInstance) {
+export async function deleteProject(app: FastifyInstance) {
   app
     .withTypeProvider<ZodTypeProvider>()
     .register(auth)
-    .post(
-      '/organizations/:slug/projects',
+    .delete(
+      '/organizations/:slug/projects/:projectId',
       {
         schema: {
           tags: ['projects'],
-          summary: 'Create new project',
+          summary: 'Delete project',
           security: [{ bearerAuth: [] }],
           params: z.object({
             slug: z.string(),
-          }),
-          body: z.object({
-            name: z.string(),
-            description: z.string(),
+            projectId: z.string().uuid(),
           }),
           response: {
-            201: z.object({
-              projectId: z.string().uuid(),
-            }),
+            204: z.null(),
           },
         },
       },
       async (request, reply) => {
-        const { slug } = request.params
+        const { slug, projectId } = request.params
         const { membership, organization, userId } =
           await request.getUserMembership(slug)
 
-        const { cannot } = getUserPermissions(userId, membership.role)
+        const project = await prisma.project.findUnique({
+          where: { id: projectId, organizationId: organization.id },
+        })
 
-        if (cannot('create', 'Project'))
+        if (!project) throw new BadRequestError('Project not found.')
+
+        const { cannot } = getUserPermissions(userId, membership.role)
+        const authProject = projectSchema.parse(project)
+
+        if (cannot('delete', authProject))
           throw new UnauthorizedError(
-            'You do not have permission to create a project.'
+            'You do not have permission to delete this project.'
           )
 
-        const { name, description } = request.body
-
-        const project = await prisma.project.create({
-          data: {
-            name,
-            description,
-            slug: createSlug(name),
-            organizationId: organization.id,
-            ownerId: userId,
+        await prisma.project.delete({
+          where: {
+            id: projectId,
           },
         })
 
-        return reply.status(201).send({
-          projectId: project.id,
-        })
+        return reply.status(204).send()
       }
     )
 }

@@ -27,6 +27,9 @@ import { updateOrganization } from './routes/orgs/update-organization'
 import { shutdownOrganization } from './routes/orgs/shutdown-organization'
 import { transferOrganization } from './routes/orgs/transfer-organization'
 import { createProject } from './routes/projects/create-project'
+import { deleteProject } from './routes/projects/delete-project'
+import { getProject } from './routes/projects/get-project'
+import { getProjects } from './routes/projects/get-projects'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -89,6 +92,9 @@ app.register(transferOrganization)
 
 // Projects routes
 app.register(createProject)
+app.register(deleteProject)
+app.register(getProject)
+app.register(getProjects)
 
 app
   .listen({ port: env.SERVER_PORT })
